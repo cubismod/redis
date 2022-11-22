@@ -94,21 +94,19 @@ proc `$`*(cursor: RedisCursor): string =
 proc open*(host = "localhost", port = 6379.Port): Redis =
   ## Open a synchronous connection to a redis server.
   result = Redis(
-    socket: newSocket(buffered = true),
+    socket: net.dial(host, port),
     pipeline: newPipeline()
   )
 
-  result.socket.connect(host, port)
 
 proc openAsync*(host = "localhost", port = 6379.Port): Future[AsyncRedis] {.async.} =
   ## Open an asynchronous connection to a redis server.
   result = AsyncRedis(
-    socket: newAsyncSocket(buffered = true),
+    socket: await asyncnet.dial(host, port),
     pipeline: newPipeline(),
     sendQueue: initDeque[Future[void]]()
   )
 
-  await result.socket.connect(host, port)
 
 proc finaliseCommand(r: Redis | AsyncRedis) =
   when r is AsyncRedis:
